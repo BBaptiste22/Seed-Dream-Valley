@@ -5,8 +5,8 @@ public class Constants {
 
     public static final int TILE_SIZE = 16;
 
-    public static final int MAP_WIDTH  = 64;
-    public static final int MAP_HEIGHT = 64;
+    public static final int MAP_WIDTH  = 38;
+    public static final int MAP_HEIGHT = 23;
 
     public static final float PPM = 32f;
 

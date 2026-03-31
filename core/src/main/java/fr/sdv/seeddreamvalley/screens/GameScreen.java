@@ -8,15 +8,25 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import fr.sdv.seeddreamvalley.Main;
 import fr.sdv.seeddreamvalley.settings.GameSettings;
 import fr.sdv.seeddreamvalley.utils.Constants;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
 
 public class GameScreen extends ScreenAdapter {
+    private ShapeRenderer shape;
+    private TiledMap map;
+    private OrthogonalTiledMapRenderer mapRenderer;
 
     // ── Référence principale ─────────────────────────────────────────
     private final Main game;
 
     // ── Rendu ────────────────────────────────────────────────────────
-    private final OrthographicCamera camera;
-    private final FitViewport        viewport;
+    private OrthographicCamera camera;
+    private final ScreenViewport viewport;
 
     // ── Map (décommentée quand GameMap sera prête) ───────────────────
     // private GameMap map;
@@ -30,37 +40,42 @@ public class GameScreen extends ScreenAdapter {
     public GameScreen(Main game) {
         this.game = game;
 
-        // Caméra + viewport
-        camera   = new OrthographicCamera();
-        viewport = new FitViewport(
-            Constants.VIEWPORT_WIDTH  * Constants.TILE_SIZE,
-            Constants.VIEWPORT_HEIGHT * Constants.TILE_SIZE,
-            camera
-        );
+        float mapPixelW = Constants.MAP_WIDTH  * Constants.TILE_SIZE; // 1024
+        float mapPixelH = Constants.MAP_HEIGHT * Constants.TILE_SIZE; // 1024
 
-        // Applique le zoom configuré dans le menu
-        camera.zoom = GameSettings.get().zoom;
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, mapPixelW, mapPixelH); // caméra calée sur la map
+        viewport = new ScreenViewport(camera);
 
-        // Map (décommentée quand GameMap sera prête)
-        // map = new GameMap();
-
-        // Spawn au centre de la map
-        playerX = (Constants.MAP_WIDTH  / 2f) * Constants.TILE_SIZE;
-        playerY = (Constants.MAP_HEIGHT / 2f) * Constants.TILE_SIZE;
+        playerX = mapPixelW / 2f;
+        playerY = mapPixelH / 2f;
     }
 
     // ────────────────────────────────────────────────────────────────
+    @Override
+    public void show() {
+        map = new TmxMapLoader().load("map.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(map);
+        shape = new ShapeRenderer();
+
+        viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        camera.zoom = 1f; // zoom neutre, la map remplit exactement
+        camera.position.set(playerX, playerY, 0);
+        camera.update();
+    }
+
     @Override
     public void render(float delta) {
         handleInput(delta);
         updateCamera();
 
-        // Clear
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Rendu map (décommenté quand GameMap sera prête)
-        // map.render(camera);
+        viewport.apply(); // <-- important : applique le viewport avant de rendre
+        mapRenderer.setView(camera);
+        mapRenderer.render();
+        drawPlayer();
     }
 
     // ── Déplacement avec les touches configurées ─────────────────────
@@ -80,9 +95,27 @@ public class GameScreen extends ScreenAdapter {
         playerY = Math.max(0, Math.min(playerY, mapPixelH));
     }
 
+   private void fitCameraToMap() {
+        float mapPixelW = Constants.MAP_WIDTH  * Constants.TILE_SIZE;
+        float mapPixelH = Constants.MAP_HEIGHT * Constants.TILE_SIZE;
+
+        float screenW = Gdx.graphics.getWidth();
+        float screenH = Gdx.graphics.getHeight();
+
+        float zoomX = mapPixelW / screenW;
+        float zoomY = mapPixelH / screenH;
+        float fitZoom = Math.max(zoomX, zoomY);
+
+        // Sauvegarde le zoom calculé dans les settings
+        GameSettings.get().zoom = fitZoom;
+
+        camera.zoom = fitZoom;
+        camera.position.set(mapPixelW / 2f, mapPixelH / 2f, 0);
+        camera.update();
+    }
+
     // ── Caméra centrée sur le joueur + zoom du settings ──────────────
     private void updateCamera() {
-        camera.zoom = GameSettings.get().zoom;
         camera.position.set(playerX, playerY, 0);
         camera.update();
     }
@@ -95,6 +128,23 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-        // map.dispose(); // décommenté quand GameMap sera prête
+        map.dispose();
+        mapRenderer.dispose();
+        shape.dispose();
+    }
+
+    private void drawPlayer() {
+        shape.setProjectionMatrix(camera.combined);
+        shape.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Corps
+        shape.setColor(0.2f, 0.6f, 1f, 1f);
+        shape.rect(playerX - 8, playerY, 16, 20);
+
+        // Tête
+        shape.setColor(0.95f, 0.75f, 0.55f, 1f);
+        shape.circle(playerX, playerY + 26, 10, 16);
+
+        shape.end();
     }
 }
