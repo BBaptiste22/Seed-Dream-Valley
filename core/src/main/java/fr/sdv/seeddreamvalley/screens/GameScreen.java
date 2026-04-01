@@ -2,6 +2,7 @@ package fr.sdv.seeddreamvalley.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -14,7 +15,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import fr.sdv.seeddreamvalley.Main;
 import fr.sdv.seeddreamvalley.player.Player;
-import fr.sdv.seeddreamvalley.utils.Constants;
 import fr.sdv.seeddreamvalley.world.Plot;
 
 import java.util.ArrayList;
@@ -77,7 +77,7 @@ public class GameScreen extends ScreenAdapter {
         // --- CAMERA ---
         camera.position.set(player.getX(), player.getY(), 0);
         camera.update();
-
+        for (Plot p : plots) p.update(delta);
         // --- RENDU ---
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -179,7 +179,9 @@ public class GameScreen extends ScreenAdapter {
         if (distX <= 2 && distY <= 2) {
             for (Plot p : plots) {
                 if (p.tileX == clickTx && p.tileY == clickTy) {
-                    p.clicked = !p.clicked;
+                    if (p.getStage() == Plot.STAGE_EMPTY) {
+                        p.plant();
+                    }
                     break; // On a trouvé la parcelle, on peut sortir de la boucle
                 }
             }
@@ -190,9 +192,10 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shape.setProjectionMatrix(camera.combined);
         for (Plot p : plots) {
-            if (p.clicked) {
+            if (p.getStage() != Plot.STAGE_EMPTY) {
+                Color c = p.getFillColor();
                 shape.begin(ShapeRenderer.ShapeType.Filled);
-                shape.setColor(0.5f, 0.3f, 0.1f, 0.5f);
+                shape.setColor(c);
                 shape.rect(p.tileX * 16, p.tileY * 16, 16, 16);
                 shape.end();
             }
