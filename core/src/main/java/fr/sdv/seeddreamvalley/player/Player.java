@@ -53,7 +53,7 @@ public class Player {
         if (Gdx.input.isKeyPressed(s.keyLeft))  { x -= speed; moving = true; facingLeft = true; }
         if (Gdx.input.isKeyPressed(s.keyRight)) { x += speed; moving = true; facingLeft = false; }
 
-        // Clamp dans la map
+        // Rester dans la map
         float mapW = Constants.MAP_WIDTH  * Constants.TILE_SIZE;
         float mapH = Constants.MAP_HEIGHT * Constants.TILE_SIZE;
         x = Math.max(0, Math.min(x, mapW - FRAME_W));

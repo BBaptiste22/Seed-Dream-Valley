@@ -238,7 +238,7 @@ public class GameScreen extends ScreenAdapter {
             }
         }
     }
-
+    // Changement de couleur
     private void drawPlots() {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -253,13 +253,7 @@ public class GameScreen extends ScreenAdapter {
         }
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
-
-    @Override
-    public void resize(int w, int h) {
-        viewport.update(w, h);
-        hudCamera.setToOrtho(false, w, h);
-    }
-
+    
     @Override
     public void dispose() {
         map.dispose();
