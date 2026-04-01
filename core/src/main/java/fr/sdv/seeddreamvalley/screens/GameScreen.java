@@ -48,6 +48,10 @@ public class GameScreen extends ScreenAdapter {
     private BitmapFont font;
     private GlyphLayout layout;
 
+    private boolean bridgeUnlocked = false;
+    private float popupTimer = 0f;
+    private static final float POPUP_DURATION = 3f;
+
     // camera
     private OrthographicCamera hudCamera;
 
@@ -89,15 +93,14 @@ public class GameScreen extends ScreenAdapter {
         // collision
         float oldX = player.getX();
         float oldY = player.getY();
-
         player.update(delta);
-
         if (isCellBlocked(player.getX(), oldY))  player.setX(oldX);
         if (isCellBlocked(player.getX(), player.getY())) player.setY(oldY);
 
-        // update parselle
+        // update parcelles
         for (Plot p : plots) p.update(delta);
 
+        // update particules
         Iterator<CoinParticle> it = particles.iterator();
         while (it.hasNext()) {
             CoinParticle cp = it.next();
@@ -105,11 +108,19 @@ public class GameScreen extends ScreenAdapter {
             if (cp.isDead()) it.remove();
         }
 
+        // déblocage pont
+        if (!bridgeUnlocked && coins >= 25) {
+            bridgeUnlocked = true;
+            popupTimer = POPUP_DURATION;
+            map.getLayers().get("Barrière_pont").setVisible(false);
+        }
+
+        // timer popup
+        if (popupTimer > 0) popupTimer -= delta;
 
         camera.position.set(player.getX(), player.getY(), 0);
         camera.update();
 
-        
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -119,7 +130,6 @@ public class GameScreen extends ScreenAdapter {
 
         drawPlots();
 
-        
         batch.setProjectionMatrix(camera.combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -129,10 +139,9 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        
         drawHUD();
+        drawPopup(); // ← ajouté
 
-        
         if (Gdx.input.isButtonJustPressed(com.badlogic.gdx.Input.Buttons.LEFT)) {
             handlePlotClick();
         }
@@ -211,14 +220,19 @@ public class GameScreen extends ScreenAdapter {
             int tx = (int)(pt[0] / 16);
             int ty = (int)(pt[1] / 16);
 
-            String[] layers = {"Colision", "Pont"};
+            // Exclure le layer "Barrière_pont" des collisions si le pont est déverrouillé
+            // Quand le pont est déverrouillé, retirer aussi le layer "Pont" pour le rendre totalement traversable
+            String[] layers = bridgeUnlocked ? 
+                new String[]{"Colision"} : 
+                new String[]{"Colision", "Pont", "Barrière_pont"};
+                
             for (String name : layers) {
                 TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(name);
                 if (layer == null) continue;
                 TiledMapTileLayer.Cell cell = layer.getCell(tx, ty);
                 if (cell != null && cell.getTile() != null) {
                     int id = cell.getTile().getId();
-                    if (id == 13 || id == 21 || id == 24 || id == 22) continue;
+                    if (id == 13 || id == 21 || id == 24 || id == 22 || id == 120) continue;
                     return true;
                 }
             }
@@ -253,7 +267,47 @@ public class GameScreen extends ScreenAdapter {
         }
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
-    
+
+    private void drawPopup() {
+        if (popupTimer <= 0) return;
+
+        float alpha = Math.min(1f, popupTimer); // fade out sur la dernière seconde
+
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+
+        float sw = Gdx.graphics.getWidth();
+        float sh = Gdx.graphics.getHeight();
+        float bw = 260f, bh = 50f;
+        float bx = sw / 2f - bw / 2f;
+        float by = sh / 2f - bh / 2f;
+
+        // Fond de la popup
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shape.setProjectionMatrix(hudCamera.combined);
+        shape.begin(ShapeRenderer.ShapeType.Filled);
+        shape.setColor(0.15f, 0.10f, 0.05f, 0.85f * alpha);
+        shape.rect(bx, by, bw, bh);
+        shape.end();
+        shape.begin(ShapeRenderer.ShapeType.Line);
+        shape.setColor(0.95f, 0.78f, 0.35f, alpha);
+        shape.rect(bx, by, bw, bh);
+        shape.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // Texte
+        String msg = "🌉 Parcelle débloquée !";
+        font.getData().setScale(1.4f);
+        font.setColor(1f, 0.9f, 0.3f, alpha);
+        layout.setText(font, msg);
+        batch.begin();
+        font.draw(batch, msg, sw / 2f - layout.width / 2f, by + bh / 2f + layout.height / 2f);
+        batch.end();
+
+        // Remet la couleur normale
+        font.setColor(Color.YELLOW);
+    }
+
     @Override
     public void dispose() {
         map.dispose();
