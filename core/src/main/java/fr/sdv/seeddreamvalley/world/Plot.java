@@ -30,7 +30,7 @@ public class Plot {
         clicked = true;
     }
 
-    // Récolte — retourne true si on peut récolter
+
     public boolean harvest() {
         if (stage == STAGE_GROWN) {
             stage = STAGE_EMPTY;

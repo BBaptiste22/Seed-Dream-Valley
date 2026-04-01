@@ -40,7 +40,7 @@ public class GameScreen extends ScreenAdapter {
     private Player player;
     private final List<Plot> plots = new ArrayList<>();
 
-    // ── Pièces ───────────────────────────────────────────────────────
+    // piece
     private int coins = 0;
     private Texture coinTexture;
     private TextureRegion coinRegion;
@@ -48,7 +48,7 @@ public class GameScreen extends ScreenAdapter {
     private BitmapFont font;
     private GlyphLayout layout;
 
-    // ── HUD (caméra fixe) ────────────────────────────────────────────
+    // camera
     private OrthographicCamera hudCamera;
 
     public GameScreen(Main game) {
@@ -65,11 +65,11 @@ public class GameScreen extends ScreenAdapter {
         camera   = new OrthographicCamera();
         viewport = new ScreenViewport(camera);
 
-        // Caméra HUD fixe
+        // Caméra fixe
         hudCamera = new OrthographicCamera();
         hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Pièce ← chargement correct
+        // chargement piece
         coinTexture = new Texture(Gdx.files.internal("piece.png"));
         coinRegion  = new TextureRegion(coinTexture);
 
@@ -86,7 +86,7 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        // ── Mouvement + collision ────────────────────────────────────
+        // collision
         float oldX = player.getX();
         float oldY = player.getY();
 
@@ -95,7 +95,7 @@ public class GameScreen extends ScreenAdapter {
         if (isCellBlocked(player.getX(), oldY))  player.setX(oldX);
         if (isCellBlocked(player.getX(), player.getY())) player.setY(oldY);
 
-        // ── Update parcelles + particules ────────────────────────────
+        // update parselle
         for (Plot p : plots) p.update(delta);
 
         Iterator<CoinParticle> it = particles.iterator();
@@ -105,11 +105,11 @@ public class GameScreen extends ScreenAdapter {
             if (cp.isDead()) it.remove();
         }
 
-        // ── Caméra ───────────────────────────────────────────────────
+
         camera.position.set(player.getX(), player.getY(), 0);
         camera.update();
 
-        // ── Rendu ────────────────────────────────────────────────────
+        
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -119,7 +119,7 @@ public class GameScreen extends ScreenAdapter {
 
         drawPlots();
 
-        // Joueur + particules (même caméra monde)
+        
         batch.setProjectionMatrix(camera.combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -129,22 +129,22 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        // ── HUD pièces (caméra fixe) ─────────────────────────────────
+        
         drawHUD();
 
-        // ── Clic ─────────────────────────────────────────────────────
+        
         if (Gdx.input.isButtonJustPressed(com.badlogic.gdx.Input.Buttons.LEFT)) {
             handlePlotClick();
         }
     }
 
-    // ── HUD : icône pièce + compteur ─────────────────────────────────
+    // piece + compteur
     private void drawHUD() {
         hudCamera.update();
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
-        // Première frame comme icône
+        
         int frameW = coinTexture.getWidth() / 6;
         batch.draw(coinTexture,
             12, Gdx.graphics.getHeight() - 36,
@@ -153,7 +153,7 @@ public class GameScreen extends ScreenAdapter {
             frameW, coinTexture.getHeight(), // taille d'une frame
             false, false);
 
-        // Compteur
+        
         String text = "x " + coins;
         layout.setText(font, text);
         font.draw(batch, text, 42, Gdx.graphics.getHeight() - 10);
@@ -161,7 +161,7 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
     }
 
-    // ── Clic : planter ou récolter ───────────────────────────────────
+    // clic 
     private void handlePlotClick() {
         Vector3 m = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(m);
@@ -179,16 +179,16 @@ public class GameScreen extends ScreenAdapter {
                 if (p.tileX == clickTx && p.tileY == clickTy) {
 
                     if (p.getStage() == Plot.STAGE_GROWN) {
-                        // ── Récolte ──
+                        // Récolte 
                         if (p.harvest()) {
                             coins++;
-                            // Particule pièce au centre de la tuile
+
                             float px = p.tileX * 16;
                             float py = p.tileY * 16;
                             particles.add(new CoinParticle(px + 8, py, coinRegion));
                         }
                     } else if (p.getStage() == Plot.STAGE_EMPTY) {
-                        // ── Planter ──
+                        // Planter 
                         p.plant();
                     }
                     break;
@@ -197,7 +197,7 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
-    // ── Collision ────────────────────────────────────────────────────
+    // Collision 
     private boolean isCellBlocked(float x, float y) {
         float hitW = 6f, hitH = 4f, offX = 6f, offY = 2f;
         float[][] points = {
@@ -226,7 +226,7 @@ public class GameScreen extends ScreenAdapter {
         return false;
     }
 
-    // ── Parcelles ────────────────────────────────────────────────────
+    // Parcelles 
     private void initPlots() {
         TiledMapTileLayer base = (TiledMapTileLayer) map.getLayers().get("Base");
         if (base == null) return;

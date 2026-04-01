@@ -18,7 +18,7 @@ public class CoinParticle {
         this.x = x - 8;
         this.y = y;
 
-        // Découpe les 6 frames (chaque frame = largeur totale / 6)
+        
         int frameW = fullTexture.getRegionWidth() / 6;
         int frameH = fullTexture.getRegionHeight();
 
@@ -33,7 +33,7 @@ public class CoinParticle {
             );
         }
 
-        // 0.1f = durée par frame (6 frames × 0.1s = 0.6s par cycle)
+
         animation = new Animation<>(0.1f, frames);
         animation.setPlayMode(Animation.PlayMode.LOOP);
     }
