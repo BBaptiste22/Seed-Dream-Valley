@@ -67,8 +67,8 @@ public class Player {
         TextureRegion frame = moving ? walkAnimation.getKeyFrame(stateTime) : idleFrame;
 
         // Gestion propre du flip (évite que le sprite ne clignote ou ne reste retourné)
-        if (facingLeft && !frame.isFlipX()) frame.flip(true, false);
-        else if (!facingLeft && frame.isFlipX()) frame.flip(true, false);
+        if (!facingLeft && !frame.isFlipX()) frame.flip(true, false);
+        else if (facingLeft && frame.isFlipX()) frame.flip(true, false);
 
         // On dessine. Note: x et y représentent ici le coin bas-gauche du perso
         batch.draw(frame, x, y, FRAME_W, FRAME_H);
