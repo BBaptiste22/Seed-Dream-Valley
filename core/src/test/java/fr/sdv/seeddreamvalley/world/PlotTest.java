@@ -1,6 +1,5 @@
 package fr.sdv.seeddreamvalley.world;
 
-import fr.sdv.seeddreamvalley.world.Plot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,25 +12,21 @@ class PlotTest {
 
     private Plot plot;
 
-    /** Crée une parcelle fraîche avant chaque test. */
     @BeforeEach
     void setUp() {
         plot = new Plot(5, 5);
     }
 
-
-    /** Fait pousser la parcelle jusqu'à GROWN (plante + 2x 11 secondes). */
     private void fairePoussreJusquaGrown() {
         plot.plant();
         plot.update(11f); // SEEDED → SPROUT
         plot.update(11f); // SPROUT → GROWN
     }
 
-
     /** Une parcelle est vide à la création. */
     @Test
     void devraitEtreVideALaCreation() {
-        assertEquals(Plot.STAGE_EMPTY, plot.getStage());
+        assertTrue(plot.isEmpty());
     }
 
     /** Les coordonnées sont correctement stockées. */
@@ -41,13 +36,12 @@ class PlotTest {
         assertEquals(5, plot.tileY);
     }
 
-    // ── Planter ──────────────────────────────────────────────────────
-
     /** Planter passe la parcelle en SEEDED. */
     @Test
     void devraitPasserEnSeededApresPlant() {
         plot.plant();
-        assertEquals(Plot.STAGE_SEEDED, plot.getStage());
+        assertFalse(plot.isEmpty());
+        assertFalse(plot.isGrown());
     }
 
     /** On ne peut pas récolter une parcelle vide. */
@@ -67,40 +61,42 @@ class PlotTest {
     @Test
     void neDevraitPasRecolterSiSprout() {
         plot.plant();
-        plot.update(11f); // SPROUT
+        plot.update(11f);
+        assertFalse(plot.isEmpty());
+        assertFalse(plot.isGrown());
         assertFalse(plot.harvest());
     }
-
 
     /** Après 10 secondes, la parcelle passe en SPROUT. */
     @Test
     void devraitPasserEnSproutApres10Secondes() {
         plot.plant();
         plot.update(11f);
-        assertEquals(Plot.STAGE_SPROUT, plot.getStage());
+        assertFalse(plot.isEmpty());
+        assertFalse(plot.isGrown());
     }
 
     /** Après 20 secondes au total, la parcelle passe en GROWN. */
     @Test
     void devraitPasserEnGrownApres20Secondes() {
         fairePoussreJusquaGrown();
-        assertEquals(Plot.STAGE_GROWN, plot.getStage());
+        assertTrue(plot.isGrown());
     }
 
     /** Une parcelle vide ne grandit pas. */
     @Test
     void neDevraitPasGrandirSiVide() {
         plot.update(999f);
-        assertEquals(Plot.STAGE_EMPTY, plot.getStage());
+        assertTrue(plot.isEmpty());
     }
 
     /** Une parcelle GROWN ne grandit plus même avec le temps. */
     @Test
     void neDevraitPlusGrandirSiGrown() {
         fairePoussreJusquaGrown();
-        assertEquals(Plot.STAGE_GROWN, plot.getStage());
+        assertTrue(plot.isGrown());
         plot.update(999f);
-        assertEquals(Plot.STAGE_GROWN, plot.getStage());
+        assertTrue(plot.isGrown());
     }
 
     /** On peut récolter une parcelle GROWN. */
@@ -115,7 +111,7 @@ class PlotTest {
     void devraitRedevenirVideApresRecolte() {
         fairePoussreJusquaGrown();
         plot.harvest();
-        assertEquals(Plot.STAGE_EMPTY, plot.getStage());
+        assertTrue(plot.isEmpty());
     }
 
     /** Après récolte, on peut replanter. */
@@ -124,7 +120,8 @@ class PlotTest {
         fairePoussreJusquaGrown();
         plot.harvest();
         plot.plant();
-        assertEquals(Plot.STAGE_SEEDED, plot.getStage());
+        assertFalse(plot.isEmpty());
+        assertFalse(plot.isGrown());
     }
 
     /** harvest() retourne false si appelé deux fois. */
@@ -135,28 +132,28 @@ class PlotTest {
         assertFalse(plot.harvest());
     }
 
-
     /** Cycle complet : planter → sprout → grown → récolter → replanter. */
     @Test
     void devraitFaireLeCycleComplet() {
         // Planter
         plot.plant();
-        assertEquals(Plot.STAGE_SEEDED, plot.getStage());
+        assertFalse(plot.isEmpty());
 
         // Pousser
         plot.update(11f);
-        assertEquals(Plot.STAGE_SPROUT, plot.getStage());
+        assertFalse(plot.isEmpty());
+        assertFalse(plot.isGrown());
 
         // Mûrir
         plot.update(11f);
-        assertEquals(Plot.STAGE_GROWN, plot.getStage());
+        assertTrue(plot.isGrown());
 
         // Récolter
         assertTrue(plot.harvest());
-        assertEquals(Plot.STAGE_EMPTY, plot.getStage());
+        assertTrue(plot.isEmpty());
 
         // Replanter
         plot.plant();
-        assertEquals(Plot.STAGE_SEEDED, plot.getStage());
+        assertFalse(plot.isEmpty());
     }
 }

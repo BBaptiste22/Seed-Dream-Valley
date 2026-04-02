@@ -174,8 +174,8 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shape.setProjectionMatrix(camera.combined);
-        for (Plot p : gameLogic.getPlots()) {
-            if (p.getStage() != Plot.STAGE_EMPTY) {
+        for (Plot p : gameLogic.getPlots()) { // ← plots devient gameLogic.getPlots()
+            if (!p.isEmpty()) {
                 shape.begin(ShapeRenderer.ShapeType.Filled);
                 shape.setColor(p.getFillColor());
                 shape.rect(p.tileX * 16, p.tileY * 16, 16, 16);

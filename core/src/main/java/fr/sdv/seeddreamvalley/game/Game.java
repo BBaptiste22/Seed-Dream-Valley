@@ -125,14 +125,14 @@ public class Game {
         for (Plot p : plots) {
             if (p.tileX != clickTx || p.tileY != clickTy) continue;
 
-            if (p.getStage() == Plot.STAGE_GROWN && p.harvest()) {
+            if (p.isGrown() && p.harvest()){
                 coins++;
                 particles.add(new CoinParticle(
                     p.tileX * TILE_SIZE + 8f,
                     p.tileY * TILE_SIZE,
                     coinRegion
                 ));
-            } else if (p.getStage() == Plot.STAGE_EMPTY) {
+            } else if (p.isEmpty()){
                 p.plant();
             }
             break;
