@@ -21,6 +21,8 @@ public class Player {
     private final TextureRegion idleFrame;
 
     private float x, y;
+    public void setX(float x) { this.x = x; } 
+    public void setY(float y) { this.y = y; } 
     private float stateTime = 0f;
     private boolean moving = false;
     private boolean facingLeft = false;
@@ -67,9 +69,8 @@ public class Player {
         TextureRegion frame = moving ? walkAnimation.getKeyFrame(stateTime) : idleFrame;
 
         // Gestion propre du flip (évite que le sprite ne clignote ou ne reste retourné)
-        if (!facingLeft && !frame.isFlipX()) frame.flip(true, false);
-        else if (facingLeft && frame.isFlipX()) frame.flip(true, false);
-
+        if (facingLeft == frame.isFlipX()) frame.flip(true, false);
+        
         // On dessine. Note: x et y représentent ici le coin bas-gauche du perso
         batch.draw(frame, x, y, FRAME_W, FRAME_H);
     }
@@ -77,8 +78,6 @@ public class Player {
     // --- Getters et Setters nécessaires pour les collisions ---
     public float getX() { return x; }
     public float getY() { return y; }
-    public void setX(float x) { this.x = x; }
-    public void setY(float y) { this.y = y; }
 
     public void dispose() {
         sheet.dispose();
